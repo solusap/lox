@@ -43,7 +43,7 @@ struct Visitor
     virtual any visitUnaryExpr(Unary& expr) = 0;
     virtual any visitVariableExpr(Variable& expr) = 0;
 };
-struct Expr 
+struct Expr  
 {
     Expr() = default;
     ~Expr() = default;
@@ -53,8 +53,8 @@ struct Expr
 struct Assign : public Expr
 {
     Token name;
-    Expr* value;
-    Assign(Token name,Expr* value)
+    shared_ptr<Expr> value;
+    Assign(Token name,shared_ptr<Expr> value)
     : name(name),value(value)
     {}
 
@@ -64,10 +64,10 @@ struct Assign : public Expr
 };
 struct Binary : public Expr
 {
-    Expr* left;
+    shared_ptr<Expr> left;
     Token oper;
-    Expr* right;
-    Binary(Expr* left,Token oper,Expr* right)
+    shared_ptr<Expr> right;
+    Binary(shared_ptr<Expr> left,Token oper,shared_ptr<Expr> right)
     : left(left),oper(oper),right(right)
     {}
 
@@ -77,10 +77,10 @@ struct Binary : public Expr
 };
 struct Call : public Expr
 {
-    Expr* callee;
+    shared_ptr<Expr> callee;
     Token paren;
     vector<Expr*> arguments;
-    Call(Expr* callee,Token paren,vector<Expr*> arguments)
+    Call(shared_ptr<Expr> callee,Token paren,vector<Expr*> arguments)
     : callee(callee),paren(paren),arguments(arguments)
     {}
 
@@ -90,9 +90,9 @@ struct Call : public Expr
 };
 struct Get : public Expr
 {
-    Expr* object;
+    shared_ptr<Expr> object;
     Token name;
-    Get(Expr* object,Token name)
+    Get(shared_ptr<Expr> object,Token name)
     : object(object),name(name)
     {}
 
@@ -102,8 +102,8 @@ struct Get : public Expr
 };
 struct Grouping : public Expr
 {
-    Expr* expression;
-    Grouping(Expr* expression)
+    shared_ptr<Expr> expression;
+    Grouping(shared_ptr<Expr> expression)
     : expression(expression)
     {}
 
@@ -124,10 +124,10 @@ struct Literal : public Expr
 };
 struct Logical : public Expr
 {
-    Expr* left;
+    shared_ptr<Expr> left;
     Token oper;
-    Expr* right;
-    Logical(Expr* left,Token oper,Expr* right)
+    shared_ptr<Expr> right;
+    Logical(shared_ptr<Expr> left,Token oper,shared_ptr<Expr> right)
     : left(left),oper(oper),right(right)
     {}
 
@@ -137,10 +137,10 @@ struct Logical : public Expr
 };
 struct Set : public Expr
 {
-    Expr* object;
+    shared_ptr<Expr> object;
     Token name;
-    Expr* value;
-    Set(Expr* object,Token name,Expr* value)
+    shared_ptr<Expr> value;
+    Set(shared_ptr<Expr> object,Token name,shared_ptr<Expr> value)
     : object(object),name(name),value(value)
     {}
 
@@ -174,8 +174,8 @@ struct This : public Expr
 struct Unary : public Expr
 {
     Token oper;
-    Expr* right;
-    Unary(Token oper,Expr* right)
+    shared_ptr<Expr> right;
+    Unary(Token oper,shared_ptr<Expr> right)
     : oper(oper),right(right)
     {}
 

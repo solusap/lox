@@ -38,7 +38,7 @@ struct Visitor
     virtual any visitVarStmt(Var& stmt) = 0;
     virtual any visitWhileStmt(While& stmt) = 0;
 };
-struct Stmt 
+struct Stmt  
 {
     Stmt() = default;
     ~Stmt() = default;
@@ -47,8 +47,8 @@ struct Stmt
 
 struct Block : public Stmt
 {
-    vector<Stmt*> statements;
-    Block(vector<Stmt*> statements)
+    vector<shared_ptr<Stmt>> statements;
+    Block(vector<shared_ptr<Stmt>> statements)
     : statements(statements)
     {}
 
@@ -71,8 +71,8 @@ struct CLASSD : public Stmt
 };
 struct Expression : public Stmt
 {
-    Expr::Expr* expression;
-    Expression(Expr::Expr* expression)
+    shared_ptr<Expr::Expr> expression;
+    Expression(shared_ptr<Expr::Expr> expression)
     : expression(expression)
     {}
 
@@ -84,8 +84,8 @@ struct Function : public Stmt
 {
     Token name;
     vector<Token> params;
-    vector<Stmt*> body;
-    Function(Token name,vector<Token> params,vector<Stmt*> body)
+    vector<shared_ptr<Stmt>> body;
+    Function(Token name,vector<Token> params,vector<shared_ptr<Stmt>> body)
     : name(name),params(params),body(body)
     {}
 
@@ -95,10 +95,10 @@ struct Function : public Stmt
 };
 struct If : public Stmt
 {
-    Expr::Expr* condition;
-    Stmt* thenBranch;
-    Stmt* elseBranch;
-    If(Expr::Expr* condition,Stmt* thenBranch,Stmt* elseBranch)
+    shared_ptr<Expr::Expr> condition;
+    shared_ptr<Stmt> thenBranch;
+    shared_ptr<Stmt> elseBranch;
+    If(shared_ptr<Expr::Expr> condition,shared_ptr<Stmt> thenBranch,shared_ptr<Stmt> elseBranch)
     : condition(condition),thenBranch(thenBranch),elseBranch(elseBranch)
     {}
 
@@ -108,8 +108,8 @@ struct If : public Stmt
 };
 struct Print : public Stmt
 {
-    Expr::Expr* expression;
-    Print(Expr::Expr* expression)
+    shared_ptr<Expr::Expr> expression;
+    Print(shared_ptr<Expr::Expr> expression)
     : expression(expression)
     {}
 
@@ -120,8 +120,8 @@ struct Print : public Stmt
 struct Return : public Stmt
 {
     Token keyword;
-    Expr::Expr* value;
-    Return(Token keyword,Expr::Expr* value)
+    shared_ptr<Expr::Expr> value;
+    Return(Token keyword,shared_ptr<Expr::Expr> value)
     : keyword(keyword),value(value)
     {}
 
@@ -132,8 +132,8 @@ struct Return : public Stmt
 struct Var : public Stmt
 {
     Token name;
-    Expr::Expr* initializer;
-    Var(Token name,Expr::Expr* initializer)
+    shared_ptr<Expr::Expr> initializer;
+    Var(Token name,shared_ptr<Expr::Expr> initializer)
     : name(name),initializer(initializer)
     {}
 
@@ -143,9 +143,9 @@ struct Var : public Stmt
 };
 struct While : public Stmt
 {
-    Expr::Expr* condition;
-    Stmt* body;
-    While(Expr::Expr* condition,Stmt* body)
+    shared_ptr<Expr::Expr> condition;
+    shared_ptr<Stmt> body;
+    While(shared_ptr<Expr::Expr> condition,shared_ptr<Stmt> body)
     : condition(condition),body(body)
     {}
 

@@ -85,8 +85,8 @@ namespace GenerateAst
             
             ctor_initlist += fmt::format("{}({}),", fName, fName);
             if (fType == baseName) {
-                ctor += fmt::format("{}* {},", baseName, fName);
-                fout<<fmt::format("    {}* {};\n", baseName, fName);
+                ctor += fmt::format("shared_ptr<{}> {},", baseName, fName);
+                fout<<fmt::format("    shared_ptr<{}> {};\n", baseName, fName);
             } else {
                 ctor += fmt::format("{} {},", fType, fName);
                 fout<<fmt::format("    {} {};\n", fType, fName);
@@ -159,7 +159,7 @@ using std::shared_ptr;
         defineVisitor(fout, baseName, types);
 
         // define base class
-        fout<<"struct "<<baseName<<" \n{\n";
+        fout<<"struct "<<baseName<<"  \n{\n";
         fout<<"    "<<baseName<<"() = default;\n";
         fout<<"    ~"<<baseName<<"() = default;\n";
         fout<<"    virtual any accept(Visitor& visitor) = 0;" <<"\n";
@@ -221,7 +221,7 @@ int main(int argc, char** argv)
 
     GenerateAst::defineAst(outputdir, "Stmt", {
         //> block-ast
-        "Block      : vector<Stmt*> statements",
+        "Block      : vector<shared_ptr<Stmt>> statements",
         //< block-ast
         /* Classes class-ast < Inheritance superclass-ast
                 "CLASS      : Token name, vector<Stmt.Function> methods",
@@ -229,28 +229,28 @@ int main(int argc, char** argv)
         //> Inheritance superclass-ast
                 "CLASSD      : Token name, Expr.Variable superclass, vector<Function> methods",
         //< Inheritance superclass-ast
-                "Expression : Expr.Expr* expression",
+                "Expression : shared_ptr<Expr.Expr> expression",
         //> Functions function-ast
-                "Function   : Token name, vector<Token> params, vector<Stmt*> body",
+                "Function   : Token name, vector<Token> params, vector<shared_ptr<Stmt>> body",
         //< Functions function-ast
         //> Control Flow if-ast
-                "If         : Expr.Expr* condition, Stmt thenBranch, Stmt elseBranch",
+                "If         : shared_ptr<Expr.Expr> condition, Stmt thenBranch, Stmt elseBranch",
         //< Control Flow if-ast
         /* Statements and State stmt-ast < Statements and State var-stmt-ast
                 "Print      : Expr expression"
         */
         //> var-stmt-ast
-                "Print      : Expr.Expr* expression",
+                "Print      : shared_ptr<Expr.Expr> expression",
         //< var-stmt-ast
         //> Functions return-ast
-                "Return     : Token keyword, Expr.Expr* value",
+                "Return     : Token keyword, shared_ptr<Expr.Expr> value",
         //< Functions return-ast
         /* Statements and State var-stmt-ast < Control Flow while-ast
                 "Var        : Token name, Expr initializer"
         */
         //> Control Flow while-ast
-                "Var        : Token name, Expr.Expr* initializer",
-                "While      : Expr.Expr* condition, Stmt body"
+                "Var        : Token name, shared_ptr<Expr.Expr> initializer",
+                "While      : shared_ptr<Expr.Expr> condition, Stmt body"
         //< Control Flow while-ast
     }, "#include \"Expr.h\"");
 

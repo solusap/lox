@@ -1,11 +1,14 @@
 #include <fmt/core.h>
 #include <any>
 #include <initializer_list>
+#include <memory>
 
 #include "Expr.h"
 #include "Stmt.h"
 #include "any_type.h"
 #include "Token.h"
+
+using std::make_shared;
 
 using std::initializer_list;
 using std::any;
@@ -17,12 +20,12 @@ struct AstPrinter : public Expr::Visitor
     {
         return any_tostring(expr.accept(*this));
     }
-    std::string print(Expr::Expr* expr) 
+    std::string print(std::shared_ptr<Expr::Expr> expr) 
     {
         return any_tostring(expr->accept(*this));
     }
 
-    any paranthesize(const string& name, initializer_list<Expr::Expr*> exprs)
+    any paranthesize(const string& name, initializer_list<shared_ptr<Expr::Expr>> exprs)
     {
         string ret = "(" + name;
         for (auto expr : exprs) {
@@ -65,13 +68,13 @@ struct AstPrinter : public Expr::Visitor
 
 int main()
 {
-    Expr::Expr* expr = new Expr::Binary(
-        new Expr::Unary(
+    shared_ptr<Expr::Expr> expr = make_shared<Expr::Binary>(
+        make_shared<Expr::Unary>(
             Token(TokenType::MINUS, "-", any(), 1),
-            new Expr::Literal(any(123))),
+            make_shared<Expr::Literal>(any(123))),
         Token(TokenType::STAR, "*", any(), 1),
-        new Expr::Grouping(
-            new Expr::Literal(any(45.67))));
+        make_shared<Expr::Grouping>(
+            make_shared<Expr::Literal>(any(45.67))));
     
-    fmt::print("{}\n", AstPrinter().print(expr));
+    fmt::print("{}\n", AstPrinter().print(*expr));
 }
