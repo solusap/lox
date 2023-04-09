@@ -17,18 +17,20 @@ namespace Stmt{
 using std::any;
 struct Expression;
 struct Print;
+struct If;
 struct Var;
-struct Unary;
 struct Block;
+struct While;
 struct Visitor
 {
     Visitor() = default;
     ~Visitor() = default;
     virtual any visitExpressionStmt(Expression& stmt) = 0;
     virtual any visitPrintStmt(Print& stmt) = 0;
+    virtual any visitIfStmt(If& stmt) = 0;
     virtual any visitVarStmt(Var& stmt) = 0;
-    virtual any visitUnaryStmt(Unary& stmt) = 0;
     virtual any visitBlockStmt(Block& stmt) = 0;
+    virtual any visitWhileStmt(While& stmt) = 0;
 };
 struct Stmt  
 {
@@ -59,6 +61,19 @@ struct Print : public Stmt
         return visitor.visitPrintStmt(*this);
     }
 };
+struct If : public Stmt
+{
+    shared_ptr<Expr::Expr> condition;
+    shared_ptr<Stmt> thenBranch;
+    shared_ptr<Stmt> elseBranch;
+    If(shared_ptr<Expr::Expr> condition,shared_ptr<Stmt> thenBranch,shared_ptr<Stmt> elseBranch)
+    : condition(condition),thenBranch(thenBranch),elseBranch(elseBranch)
+    {}
+
+    any accept(Visitor& visitor) override {
+        return visitor.visitIfStmt(*this);
+    }
+};
 struct Var : public Stmt
 {
     Token name;
@@ -71,18 +86,6 @@ struct Var : public Stmt
         return visitor.visitVarStmt(*this);
     }
 };
-struct Unary : public Stmt
-{
-    Token oper;
-    shared_ptr<Expr::Expr> right;
-    Unary(Token oper,shared_ptr<Expr::Expr> right)
-    : oper(oper),right(right)
-    {}
-
-    any accept(Visitor& visitor) override {
-        return visitor.visitUnaryStmt(*this);
-    }
-};
 struct Block : public Stmt
 {
     vector<shared_ptr<Stmt>> statments;
@@ -92,6 +95,18 @@ struct Block : public Stmt
 
     any accept(Visitor& visitor) override {
         return visitor.visitBlockStmt(*this);
+    }
+};
+struct While : public Stmt
+{
+    shared_ptr<Expr::Expr> condition;
+    shared_ptr<Stmt> body;
+    While(shared_ptr<Expr::Expr> condition,shared_ptr<Stmt> body)
+    : condition(condition),body(body)
+    {}
+
+    any accept(Visitor& visitor) override {
+        return visitor.visitWhileStmt(*this);
     }
 };
 

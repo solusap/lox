@@ -260,9 +260,11 @@ int main(int argc, char** argv)
     GenerateAst::defineAst(outputdir, "Stmt", {
         "Expression : shared_ptr<Expr.Expr> expression",
         "Print : shared_ptr<Expr.Expr> expression",
+        "If : shared_ptr<Expr.Expr> condition, shared_ptr<Stmt> thenBranch, shared_ptr<Stmt> elseBranch",
         "Var : Token name, shared_ptr<Expr.Expr> initexpr",
-        "Unary : Token oper, shared_ptr<Expr.Expr> right",
-        "Block : vector<shared_ptr<Stmt>> statments"
+        "Block : vector<shared_ptr<Stmt>> statments",
+        "While : shared_ptr<Expr.Expr> condition, shared_ptr<Stmt> body"
+        
     }, "#include \"Expr.h\"");
 
 

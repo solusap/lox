@@ -1,6 +1,7 @@
 #include "Interpreter.h"
 #include "Environment.h"
 #include "Stmt.h"
+#include "Token.h"
 #include "any_type.h"
 #include <fmt/core.h>
 #include <exception>
@@ -149,7 +150,17 @@ std::any Interpter::visitGetExpr(Expr::Get& expr)
 }
 std::any Interpter::visitLogicalExpr(Expr::Logical& expr)
 {
-     return std::any();
+    std::any left = evaluate(expr.left);
+    if (expr.oper.type == TokenType::OR) {
+        if (isTruthy(left)) {
+            return left;
+        }
+    } else {
+        if (!isTruthy(left)) {
+            return left;
+        }
+    }
+    return evaluate(expr.right);
 }
 std::any Interpter::visitSetExpr(Expr::Set& expr)
 {
@@ -194,11 +205,6 @@ std::any Interpter::visitVarStmt(Stmt::Var &stmt)
     return std::any{};
 }
 
-std::any Interpter::visitUnaryStmt(Stmt::Unary& stmt)
-{
-    return std::any{};
-}
-
 // becuase C++ has no final keyword; use RAII to do some action when exception occures
 template <typename F>
 struct FinalAction
@@ -231,7 +237,28 @@ std::any Interpter::visitBlockStmt(Stmt::Block &block)
 {
     executeBlock(block.statments, std::make_shared<Environment>(environment));
     return std::any{};
-}   
+}
+
+std::any Interpter::visitIfStmt(Stmt::If &stmt)
+{
+    std::any conditionVal = evaluate(*(stmt.condition));
+    if (isTruthy(conditionVal)) {
+        execute(*stmt.thenBranch);
+    } else if (stmt.elseBranch) {
+        execute(*stmt.thenBranch);
+    }
+    return std::any{};  
+}
+
+std::any Interpter::visitWhileStmt(Stmt::While& stmt)
+{
+    std::any conditionVal = evaluate(stmt.condition);
+    while (isTruthy(conditionVal)) {
+        execute(*stmt.body);
+        conditionVal = evaluate(stmt.condition);
+    }
+    return std::any{};
+}
 
 void Interpter::interpret(Expr::Expr &expression)
 {

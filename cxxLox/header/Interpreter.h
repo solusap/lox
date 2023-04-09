@@ -39,8 +39,9 @@ struct Interpter : public Expr::Visitor, public Stmt::Visitor
     std::any visitPrintStmt(Stmt::Print& stmt) override;
     std::any visitExpressionStmt(Stmt::Expression& stmt) override;
     std::any visitVarStmt(Stmt::Var& stmt) override;
-    std::any visitUnaryStmt(Stmt::Unary& stmt) override;
     std::any visitBlockStmt(Stmt::Block& block) override;
+    std::any visitIfStmt(Stmt::If& stmt) override;
+    std::any visitWhileStmt(Stmt::While& stmt) override;
 
     // std::any visitCLASSDStmt(Stmt::CLASSD& stmt) override;
     // std::any visitFunctionStmt(Stmt::Function& stmt) override;

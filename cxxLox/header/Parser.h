@@ -28,10 +28,17 @@ struct Parser
     shared_ptr<Expr::Expr> unary();
     shared_ptr<Expr::Expr> primary();
     shared_ptr<Expr::Expr> assignment();
+    shared_ptr<Expr::Expr> or_();
+    shared_ptr<Expr::Expr> and_();
+
 
     shared_ptr<Stmt::Stmt> statement();
     shared_ptr<Stmt::Stmt> printStatement();
     shared_ptr<Stmt::Stmt> expressionStatement();
+    shared_ptr<Stmt::Stmt> ifStatement();
+    shared_ptr<Stmt::Stmt> whileStatement();
+    shared_ptr<Stmt::Stmt> forStatement();
+
 
     shared_ptr<Expr::Expr> parse1();
     std::vector<shared_ptr<Stmt::Stmt>> parse();
