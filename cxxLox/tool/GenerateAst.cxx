@@ -219,6 +219,7 @@ int main(int argc, char** argv)
         "Variable : Token name"
     });
 
+#if 0
     GenerateAst::defineAst(outputdir, "Stmt", {
         //> block-ast
         "Block      : vector<shared_ptr<Stmt>> statements",
@@ -252,6 +253,16 @@ int main(int argc, char** argv)
                 "Var        : Token name, shared_ptr<Expr.Expr> initializer",
                 "While      : shared_ptr<Expr.Expr> condition, Stmt body"
         //< Control Flow while-ast
+    }, "#include \"Expr.h\"");
+
+#endif
+
+    GenerateAst::defineAst(outputdir, "Stmt", {
+        "Expression : shared_ptr<Expr.Expr> expression",
+        "Print : shared_ptr<Expr.Expr> expression",
+        "Var : Token name, shared_ptr<Expr.Expr> initexpr",
+        "Unary : Token oper, shared_ptr<Expr.Expr> right",
+        "Block : vector<shared_ptr<Stmt>> statments"
     }, "#include \"Expr.h\"");
 
 

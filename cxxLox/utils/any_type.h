@@ -12,6 +12,20 @@
 
 using std::string;
 
+template<typename T>
+bool any_is_type(std::any const& v) {
+    return v.type() == typeid(T);
+}
+
+inline bool any_type_same(std::any const& a, std::any const& b) {
+    return a.type() == b.type();
+}
+
+template <typename T>
+bool any_is_equal(std::any const& a, std::any const& b) {
+    return std::any_cast<T>(a) == std::any_cast<T>(b);
+}
+
 template<class T, class F>
 std::pair<const std::type_index, std::function<string(std::any const&)>> to_any_visitor(F const &f)
 {
@@ -42,6 +56,8 @@ static std::unordered_map<
             { return "nullptr"; }),
         to_any_visitor<string>([](const string& s) -> string
             { return s; }),
+        to_any_visitor<bool>([](bool x) -> string
+            { return x ? "true" : "false"; }),
         // ... add more handlers for your types ...
     };
 

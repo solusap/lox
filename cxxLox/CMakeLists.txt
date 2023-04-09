@@ -12,21 +12,26 @@ set(cxxLox_src
     src/Lox.cxx
     src/Scanner.cxx
     src/Token.cxx
+    src/Parser.cxx
+    src/Interpreter.cxx
+    src/Environment.cxx
 )
 add_executable(cxxLox
     ${cxxLox_src}
 )
 
+add_dependencies(cxxLox genAstHeader)
 
 target_compile_options(cxxLox PUBLIC
     -g
     -std=c++17
     -fsanitize=address
+    -O0
 )
 
 target_include_directories(cxxLox PUBLIC
-    ./header
-    ./utils
+    header
+    utils
 )
 
 target_link_libraries(cxxLox

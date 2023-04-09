@@ -1,9 +1,14 @@
 #ifndef _LOX_H_
 #define _LOX_H_
+#include "Stmt.h"
 #include "Token.h"
 #include "Scanner.h"
+#include "Parser.h"
+#include "Interpreter.h"
+
 #include <fmt/core.h>
 #include <iterator>
+#include <memory>
 #include <system_error>
 #include <vector>
 #include <string>
@@ -21,6 +26,9 @@ struct Scanner;
 
 class LoxCxx 
 {
+    std::unique_ptr<Parser> parser;
+    Interpter interp;
+
 public:
     LoxCxx() {};
     bool hadError = false;
@@ -31,9 +39,12 @@ public:
 		Scanner scanner(source, errorHandle);
 		vector<Token> tokens = scanner.scanTokens();
 
-        for (auto&& token : tokens) {
-            fmt::print("{}\n", token.tostring());
-        }
+        // for (auto&& token : tokens) {
+        //     fmt::print("{}\n", token.tostring());
+        // }
+        parser = std::make_unique<Parser>(tokens);
+        vector<shared_ptr<Stmt::Stmt>> statements = parser->parse();
+        interp.interpret(statements);
 	}
 
     void report(int line, const string& where, const string & msg) {
@@ -53,7 +64,7 @@ public:
         } else {
             throw(errno);
         }
-        fmt::print("Get source from {}", filename);
+        fmt::print("Lox execute '{}' result: \n", filename);
         run(source);
         if (hadError) {
             exit(65);
@@ -65,7 +76,7 @@ public:
 		for (;;) {
 			fmt::print("> ");
 			string str;
-			if (cin >> str) {
+			if (std::getline(std::cin, str)) {
 				run(str);
 			}
 			

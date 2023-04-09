@@ -29,7 +29,7 @@ char Scanner::advance()
 
 void Scanner::addToken(TokenType type)
 {
-    addToken(type, std::any(nullptr));
+    addToken(type, std::any());
 }
 
 void Scanner::addToken(TokenType type, const std::any& literal)
@@ -84,7 +84,7 @@ void Scanner::getstring()
         return;
     }
     advance();
-    string val = source.substr(start + 1, current - start);
+    string val = source.substr(start + 1, current - start - 2);
     addToken(STRING, std::any(val));
 }
 
@@ -125,7 +125,7 @@ void Scanner::identifier()
     while (isAlphaNumeric(peek())) {
         advance();
     }
-    string text = source.substr(start, current - start + 1);
+    string text = source.substr(start, current - start);
     TokenType type =  keywords.count(text) != 0 ? keywords.at(text) : IDENTIFIER;
     addToken(type);
 }
@@ -187,6 +187,6 @@ vector<Token> Scanner::scanTokens()
         start = current;
         scanToken();
     }
-    tokens.push_back(Token(TEOF, "", std::any(nullptr), line));
+    tokens.push_back(Token(TEOF, "", std::any(), line));
     return tokens;
 }
