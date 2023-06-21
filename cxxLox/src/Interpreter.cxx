@@ -3,9 +3,37 @@
 #include "Stmt.h"
 #include "Token.h"
 #include "any_type.h"
+#include <any>
 #include <fmt/core.h>
 #include <exception>
+#include <memory>
 #include <stdexcept>
+#include <chrono>
+#include "LoxCallable.h"
+
+
+struct nativeClock : public LoxCallable
+{
+    int arity() override {return 0;}
+    std::any call(Interpter& interpreter, vector<std::any>arguments) override {
+        auto now = std::chrono::steady_clock::now();
+        return std::any{now};
+    }
+    string toString() override {
+        return "<native fn>";
+    }
+};
+
+Interpter::Interpter()
+{
+    shared_ptr<LoxCallable> clockFunc = std::make_shared<nativeClock>();
+    globals.define("clock", std::any{clockFunc});
+
+    register_any_visitor<shared_ptr<LoxCallable>>(
+            [](shared_ptr<LoxCallable> callablePtr)->string {
+        return fmt::format("{}", callablePtr->toString());
+    });
+}
 
 void RuntimeError(const Token& token, std::string const& msg)
 {
@@ -137,13 +165,30 @@ std::any Interpter::visitBinaryExpr(Expr::Binary& expr)
 std::any Interpter::visitAssignExpr(Expr::Assign& expr)
 {
     std::any value = evaluate(expr.value);
-    environment.assign(expr.name, value);
+    environment->assign(expr.name, value);
     return value;
 }
 std::any Interpter::visitCallExpr(Expr::Call& expr)
 {
-     return std::any();
+    std::any callee = evaluate(expr.callee);
+
+    vector<std::any> arguments;
+    for (auto&& arg : expr.arguments) {
+        arguments.push_back(evaluate(*arg));
+    }
+    // need to check if the callee could be a function
+    if (!any_is_type<shared_ptr<LoxCallable>>(callee)) {
+        RuntimeError(expr.paren, "Can only call functions and classes.");
+    }
+    
+    auto function = std::any_cast<shared_ptr<LoxCallable>>(callee);
+    // check pass arguments numbers same as function define
+    if (arguments.size() != function->arity()) {
+        RuntimeError(expr.paren, fmt::format("Expected {} arguments but got {}.", function->arity(), arguments.size()));
+    }
+    return function->call(*this, arguments);
 }
+
 std::any Interpter::visitGetExpr(Expr::Get& expr)
 {
      return std::any();
@@ -176,7 +221,7 @@ std::any Interpter::visitThisExpr(Expr::This& expr)
 }
 std::any Interpter::visitVariableExpr(Expr::Variable& expr)
 {
-    return environment.get(expr.name);
+    return environment->get(expr.name);
 }
 
 
@@ -201,7 +246,8 @@ std::any Interpter::visitVarStmt(Stmt::Var &stmt)
     if (stmt.initexpr != nullptr) {
         value = this->evaluate(stmt.initexpr);
     }
-    environment.define(stmt.name.lexeme, value);
+    fmt::print("var define {}: {} {}\n", stmt.name.lexeme, any_tostring(value), (void*)(this->environment));
+    environment->define(stmt.name.lexeme, value);
     return std::any{};
 }
 
@@ -222,12 +268,15 @@ FinalAction<F> finally(F f)
 }
 
 void Interpter::executeBlock(vector<shared_ptr<Stmt::Stmt>>& statements, 
-                             std::shared_ptr<Environment> env)
+                             Environment& env)
 {
-    Environment previous = this->environment;
-    auto action = [this, &previous]() { this->environment = previous; };
+    Environment* previous = this->environment;
+    auto action = [this, previous]() {
+        this->environment = previous;
+        fmt::print("finally action this->env = {}\n", this->environment->toString());
+    };
     finally(action);
-    this->environment = *env;
+    this->environment = &env;
     for (auto&& stmt : statements) {
         execute(*stmt);
     }
@@ -235,7 +284,8 @@ void Interpter::executeBlock(vector<shared_ptr<Stmt::Stmt>>& statements,
 
 std::any Interpter::visitBlockStmt(Stmt::Block &block)
 {
-    executeBlock(block.statments, std::make_shared<Environment>(environment));
+    Environment env(this->environment);
+    executeBlock(block.statments, env);
     return std::any{};
 }
 
@@ -258,6 +308,22 @@ std::any Interpter::visitWhileStmt(Stmt::While& stmt)
         conditionVal = evaluate(stmt.condition);
     }
     return std::any{};
+}
+
+std::any Interpter::visitFunctionStmt(Stmt::Function& stmt)
+{
+    std::shared_ptr<LoxCallable> func = std::make_shared<LoxFunction>(stmt, *environment);
+    environment->define(stmt.name.lexeme, std::any{func});
+    return std::any{};
+}
+
+std::any Interpter::visitReturnStmt(Stmt::Return& stmt)
+{
+    std::any value {};
+    if (stmt.value) {
+        value = evaluate(stmt.value);
+    }
+    throw ReturnOut(value);
 }
 
 void Interpter::interpret(Expr::Expr &expression)

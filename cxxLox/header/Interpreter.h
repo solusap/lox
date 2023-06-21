@@ -14,8 +14,8 @@
 
 struct Interpter : public Expr::Visitor, public Stmt::Visitor
 {
-
-    Environment environment;
+    Environment globals;
+    Environment* environment = &globals;
     bool isTruthy(std::any& obj);
     bool isEqual(std::any const& a, std::any const& b);
 
@@ -42,16 +42,24 @@ struct Interpter : public Expr::Visitor, public Stmt::Visitor
     std::any visitBlockStmt(Stmt::Block& block) override;
     std::any visitIfStmt(Stmt::If& stmt) override;
     std::any visitWhileStmt(Stmt::While& stmt) override;
+    std::any visitFunctionStmt(Stmt::Function& stmt) override;
+    std::any visitReturnStmt(Stmt::Return& stmt) override;
+
 
     // std::any visitCLASSDStmt(Stmt::CLASSD& stmt) override;
-    // std::any visitFunctionStmt(Stmt::Function& stmt) override;
-    // std::any visitIfStmt(Stmt::If& stmt) override;
-    // std::any visitReturnStmt(Stmt::Return& stmt) override;
-    // std::any visitWhileStmt(Stmt::While& stmt) override;
+
+    Interpter();
     void interpret(Expr::Expr& expression);
     void interpret(std::vector<shared_ptr<Stmt::Stmt>>& statements);
     void execute(Stmt::Stmt& stmt);
-    void executeBlock(vector<shared_ptr<Stmt::Stmt>>& statements, std::shared_ptr<Environment> env);
+    void executeBlock(vector<shared_ptr<Stmt::Stmt>>& statements, Environment& env);
+};
+
+struct ReturnOut : public std::runtime_error
+{
+    std::any value;
+    ReturnOut(std::any& value) : std::runtime_error(""), value(value)
+    { }
 };
 
 #endif

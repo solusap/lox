@@ -79,8 +79,8 @@ struct Call : public Expr
 {
     shared_ptr<Expr> callee;
     Token paren;
-    vector<Expr*> arguments;
-    Call(shared_ptr<Expr> callee,Token paren,vector<Expr*> arguments)
+    vector<shared_ptr<Expr>> arguments;
+    Call(shared_ptr<Expr> callee,Token paren,vector<shared_ptr<Expr>> arguments)
     : callee(callee),paren(paren),arguments(arguments)
     {}
 

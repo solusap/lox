@@ -30,6 +30,8 @@ struct Parser
     shared_ptr<Expr::Expr> assignment();
     shared_ptr<Expr::Expr> or_();
     shared_ptr<Expr::Expr> and_();
+    shared_ptr<Expr::Expr> call();
+    shared_ptr<Expr::Expr> finishCall(shared_ptr<Expr::Expr>callee);
 
 
     shared_ptr<Stmt::Stmt> statement();
@@ -38,6 +40,7 @@ struct Parser
     shared_ptr<Stmt::Stmt> ifStatement();
     shared_ptr<Stmt::Stmt> whileStatement();
     shared_ptr<Stmt::Stmt> forStatement();
+    shared_ptr<Stmt::Stmt> returnStatement();
 
 
     shared_ptr<Expr::Expr> parse1();
@@ -56,6 +59,8 @@ struct Parser
     shared_ptr<Stmt::Stmt> declaration();
     shared_ptr<Stmt::Stmt> varDeclaration();
     vector<shared_ptr<Stmt::Stmt>> block();
+    shared_ptr<Stmt::Stmt> function(const string& kind);
+    
 };
 
 class ParseError : public std::runtime_error

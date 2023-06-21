@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 
 add_executable(AstPrinter
     AstPrinter.cxx
+    ${CMAKE_SOURCE_DIR}/cxxLox/src/any_type.cxx
     ${CMAKE_SOURCE_DIR}/cxxLox/src/Token.cxx
 )
 

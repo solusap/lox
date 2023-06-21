@@ -8,13 +8,15 @@ set(LoxProjectRoot ${CMAKE_SOURCE_DIR})
 add_subdirectory(tool)
 add_subdirectory(test)
 
-set(cxxLox_src 
+set(cxxLox_src
+    src/any_type.cxx
     src/Lox.cxx
     src/Scanner.cxx
     src/Token.cxx
     src/Parser.cxx
     src/Interpreter.cxx
     src/Environment.cxx
+    src/LoxCallable.cxx
 )
 add_executable(cxxLox
     ${cxxLox_src}

@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdexcept>
 #include "fmt/core.h"
+#include "any_type.h"
 // struct Environment
 // {
 //     std::map<std::string, std::any> values;
@@ -14,13 +15,32 @@ Environment::Environment() : enclosing(nullptr)
 {
 }
 
-Environment::Environment(std::shared_ptr<Environment> enclosing) : enclosing(enclosing)
+Environment::Environment(const Environment& env)
+{
+    this->enclosing = env.enclosing;
+    this->values = env.values;
+    this->enclosing = nullptr;
+}
+
+Environment Environment::operator=(const Environment& env)
+{
+    this->enclosing = env.enclosing;
+    this->values = env.values;
+    this->enclosing = nullptr;
+    return *this;
+}
+
+Environment::Environment(Environment* enclosing) : enclosing(enclosing)
 {
 }
 
 void Environment::define(const std::string &name, const std::any &value)
 {
-    values.insert({name, value});
+    if (values.count(name) == 0) {
+        values.insert({name, value});
+    } else {
+        values[name] = value;
+    }
 }
 
 std::any Environment::get(Token name)
@@ -45,4 +65,13 @@ void Environment::assign(Token name, const std::any &value)
         return;
     }
     throw std::runtime_error(fmt::format("Undefined variable '{}'.", name.lexeme));
+}
+
+string Environment::toString() const
+{
+    string ret;
+    for (auto&& v: values) {
+        ret += fmt::format("{}: {}\n", v.first, any_tostring(v.second));
+    }
+    return ret;
 }

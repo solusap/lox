@@ -192,7 +192,7 @@ int main(int argc, char** argv)
         //< Statements and State assign-expr
         "Binary   : Expr left, Token oper, Expr right",
         //> Functions call-expr
-        "Call     : Expr callee, Token paren, vector<Expr*> arguments",
+        "Call     : Expr callee, Token paren, vector<shared_ptr<Expr>> arguments",
         //< Functions call-expr
         //> Classes get-ast
         "Get      : Expr object, Token name",
@@ -263,7 +263,9 @@ int main(int argc, char** argv)
         "If : shared_ptr<Expr.Expr> condition, shared_ptr<Stmt> thenBranch, shared_ptr<Stmt> elseBranch",
         "Var : Token name, shared_ptr<Expr.Expr> initexpr",
         "Block : vector<shared_ptr<Stmt>> statments",
-        "While : shared_ptr<Expr.Expr> condition, shared_ptr<Stmt> body"
+        "While : shared_ptr<Expr.Expr> condition, shared_ptr<Stmt> body",
+        "Function : Token name, vector<Token> parameters, vector<shared_ptr<Stmt>> body",
+        "Return : Token keyword, shared_ptr<Expr.Expr> value"
         
     }, "#include \"Expr.h\"");
 

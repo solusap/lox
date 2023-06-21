@@ -21,6 +21,8 @@ struct If;
 struct Var;
 struct Block;
 struct While;
+struct Function;
+struct Return;
 struct Visitor
 {
     Visitor() = default;
@@ -31,6 +33,8 @@ struct Visitor
     virtual any visitVarStmt(Var& stmt) = 0;
     virtual any visitBlockStmt(Block& stmt) = 0;
     virtual any visitWhileStmt(While& stmt) = 0;
+    virtual any visitFunctionStmt(Function& stmt) = 0;
+    virtual any visitReturnStmt(Return& stmt) = 0;
 };
 struct Stmt  
 {
@@ -107,6 +111,31 @@ struct While : public Stmt
 
     any accept(Visitor& visitor) override {
         return visitor.visitWhileStmt(*this);
+    }
+};
+struct Function : public Stmt
+{
+    Token name;
+    vector<Token> parameters;
+    vector<shared_ptr<Stmt>> body;
+    Function(Token name,vector<Token> parameters,vector<shared_ptr<Stmt>> body)
+    : name(name),parameters(parameters),body(body)
+    {}
+
+    any accept(Visitor& visitor) override {
+        return visitor.visitFunctionStmt(*this);
+    }
+};
+struct Return : public Stmt
+{
+    Token keyword;
+    shared_ptr<Expr::Expr> value;
+    Return(Token keyword,shared_ptr<Expr::Expr> value)
+    : keyword(keyword),value(value)
+    {}
+
+    any accept(Visitor& visitor) override {
+        return visitor.visitReturnStmt(*this);
     }
 };
 

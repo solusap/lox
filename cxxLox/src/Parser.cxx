@@ -2,6 +2,7 @@
 #include "Expr.h"
 #include "Stmt.h"
 #include "Token.h"
+#include <fmt/core.h>
 #include <memory>
 
 bool Parser::isAtEnd()
@@ -141,7 +142,36 @@ shared_ptr<Expr::Expr> Parser::factor()
     return expr;
 }
 
-// unary          → ( "!" | "-" ) unary
+shared_ptr<Expr::Expr>Parser::finishCall(shared_ptr<Expr::Expr> callee)
+{
+    vector<shared_ptr<Expr::Expr>> arguments;
+    if (!check(TokenType::RIGHT_PAREN)) {
+        do {
+            if (arguments.size() >= 255) {
+                parseError(peek(), "Can't have more than 255 arguments.");
+            }
+            arguments.emplace_back(expression());
+        } while(match(TokenType::COMMA));
+    }
+    Token paren = consume(RIGHT_PAREN, "Expected ')' after arguments.");
+    return std::make_shared<Expr::Call>(callee, paren, arguments);
+}
+
+// call -> primary ("(" arguments? ")")*
+shared_ptr<Expr::Expr>Parser::call()
+{
+    shared_ptr<Expr::Expr> expr = primary();
+    while (true) {
+        if (match(TokenType::LEFT_PAREN)) {
+            expr = finishCall(expr);
+        } else {
+            break;
+        }
+    }
+    return expr;
+}
+
+// unary          → ( "!" | "-" ) unary | call
 //                | primary ;
 shared_ptr<Expr::Expr> Parser::unary()
 {
@@ -150,7 +180,7 @@ shared_ptr<Expr::Expr> Parser::unary()
         auto right = primary();
         return std::make_shared<Expr::Unary>(oper, right);
     }
-    return primary();
+    return call();
 }
 
 // primary        → NUMBER | STRING | "true" | "false" | "nil"
@@ -193,9 +223,9 @@ Token Parser::consume(TokenType t, const string &message)
 void Parser::parseError(const Token &t, const string &msg)
 {
     if (t.type == TokenType::TEOF) {
-        throw ParseError(fmt::format("[line {}] Error at end.\n", t.line));
+        throw ParseError(fmt::format("[line {}] Error {} at end.\n", t.line, msg));
     } else {
-        throw ParseError(fmt::format("[line {}] Error at {}.\n", t.line, t.lexeme));
+        throw ParseError(fmt::format("[line {}] Error {} at {}.\n", t.line, msg, t.lexeme));
     }
 }
 
@@ -310,15 +340,29 @@ shared_ptr<Stmt::Stmt> Parser::forStatement()
     if (!condition) {
         condition = std::make_shared<Expr::Literal>(true);
     }
+    body = std::make_shared<Stmt::While>(condition, body);
     if (init) {
         body = std::make_shared<Stmt::Block>(vector<shared_ptr<Stmt::Stmt>>{init, body});
     }
-    body = std::make_shared<Stmt::While>(condition, body);
     return body;
+}
+
+shared_ptr<Stmt::Stmt> Parser::returnStatement()
+{
+    Token keyword = previous();
+    shared_ptr<Expr::Expr> value;
+    if (!check(SEMICOLON)) {
+        value = expression();
+    }
+    consume(TokenType::SEMICOLON, "Expect ';' after return value");
+    return std::make_shared<Stmt::Return>(keyword, value);
 }
 
 shared_ptr<Stmt::Stmt> Parser::statement()
 {
+    if (match(TokenType::RETURN)) {
+        return returnStatement();
+    }
     if (match(TokenType::WHILE)) {
         return whileStatement();
     }
@@ -352,9 +396,33 @@ shared_ptr<Stmt::Stmt> Parser::varDeclaration()
     return std::make_shared<Stmt::Var>(varName, initValue);
 }
 
+shared_ptr<Stmt::Stmt> Parser::function(const string &kind)
+{
+    Token name = consume(IDENTIFIER, fmt::format("Expected {} name .", kind));
+    consume(LEFT_PAREN, fmt::format("Expected '(' after {} name.", kind));
+
+    vector<Token> params;
+    if (!check(TokenType::RIGHT_PAREN)) {
+        do {
+            if (params.size() >= 255) {
+                parseError(peek(), "Can't have more than 255 parameters");
+            }
+
+            params.push_back(consume(IDENTIFIER, "Expected parameter name"));
+        } while (match(TokenType::COMMA));
+    }
+    consume(RIGHT_PAREN, "Expect ')' after parameters");
+    consume(LEFT_BRACE, fmt::format("Expect {} before {} body.", "{", kind));
+    vector<shared_ptr<Stmt::Stmt>> body = block();
+    return std::make_shared<Stmt::Function>(name, params, body);
+}
+
 shared_ptr<Stmt::Stmt> Parser::declaration()
 {
     try {
+        if (match(TokenType::FUN)) {
+            return function("function");
+        }
         if (match(TokenType::VAR)) {
             auto t = varDeclaration();
             return t;
