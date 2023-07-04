@@ -11,6 +11,7 @@
 #include <chrono>
 #include "LoxCallable.h"
 
+extern std::map<Environment *, std::string> g_objTrace;
 
 struct nativeClock : public LoxCallable
 {
@@ -26,13 +27,27 @@ struct nativeClock : public LoxCallable
 
 Interpter::Interpter()
 {
+    globals = std::make_shared<Environment>();
     shared_ptr<LoxCallable> clockFunc = std::make_shared<nativeClock>();
-    globals.define("clock", std::any{clockFunc});
+    globals->define("clock", std::any{clockFunc});
+
+    environment = std::make_shared<Environment>(globals);
 
     register_any_visitor<shared_ptr<LoxCallable>>(
             [](shared_ptr<LoxCallable> callablePtr)->string {
         return fmt::format("{}", callablePtr->toString());
     });
+}
+
+Interpter::~Interpter()
+{
+    environment->enclosing.reset();
+    environment.reset();
+    // globals.reset();
+    globals.reset();
+    for (auto && p : g_objTrace) {
+        fmt::print("{}\n\n", p.second);
+    }
 }
 
 void RuntimeError(const Token& token, std::string const& msg)
@@ -246,7 +261,7 @@ std::any Interpter::visitVarStmt(Stmt::Var &stmt)
     if (stmt.initexpr != nullptr) {
         value = this->evaluate(stmt.initexpr);
     }
-    fmt::print("var define {}: {} {}\n", stmt.name.lexeme, any_tostring(value), (void*)(this->environment));
+    // fmt::print("var define {}: {} {}\n", stmt.name.lexeme, any_tostring(value), (void*)(this->environment));
     environment->define(stmt.name.lexeme, value);
     return std::any{};
 }
@@ -268,15 +283,15 @@ FinalAction<F> finally(F f)
 }
 
 void Interpter::executeBlock(vector<shared_ptr<Stmt::Stmt>>& statements, 
-                             Environment& env)
+                             shared_ptr<Environment> env)
 {
-    Environment* previous = this->environment;
-    auto action = [this, previous]() {
+    shared_ptr<Environment> previous = this->environment;
+    auto action = [this, &previous]() {
         this->environment = previous;
         fmt::print("finally action this->env = {}\n", this->environment->toString());
     };
     finally(action);
-    this->environment = &env;
+    this->environment = env;
     for (auto&& stmt : statements) {
         execute(*stmt);
     }
@@ -284,7 +299,9 @@ void Interpter::executeBlock(vector<shared_ptr<Stmt::Stmt>>& statements,
 
 std::any Interpter::visitBlockStmt(Stmt::Block &block)
 {
-    Environment env(this->environment);
+    shared_ptr<Environment> env = std::make_shared<Environment>(this->environment);
+    // Environment env {this->environment};
+    // shared_ptr<Environment> env2(&env,  [] (auto p) {});
     executeBlock(block.statments, env);
     return std::any{};
 }
@@ -312,7 +329,7 @@ std::any Interpter::visitWhileStmt(Stmt::While& stmt)
 
 std::any Interpter::visitFunctionStmt(Stmt::Function& stmt)
 {
-    std::shared_ptr<LoxCallable> func = std::make_shared<LoxFunction>(stmt, *environment);
+    std::shared_ptr<LoxCallable> func = std::make_shared<LoxFunction>(stmt, environment);
     environment->define(stmt.name.lexeme, std::any{func});
     return std::any{};
 }

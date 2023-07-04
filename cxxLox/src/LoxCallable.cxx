@@ -6,18 +6,19 @@
 #include <fmt/core.h>
 #include <memory>
 
-LoxFunction::LoxFunction(Stmt::Function& declaration, Environment& closure) : declaration(declaration), closure(closure)
+LoxFunction::LoxFunction(Stmt::Function& declaration, shared_ptr<Environment> closure) : declaration(declaration), closure(closure)
 {
 }
 
 std::any LoxFunction::call(Interpter &interpreter, std::vector<std::any> arguments)
 {
-    Environment environment {closure};
+    shared_ptr<Environment> environment = std::make_shared<Environment>(closure);
+    // environment->enclosing = closure;
     for (int i = 0; i < declaration.parameters.size(); i++) {
-        environment.define(declaration.parameters[i].lexeme, arguments[i]);
-        fmt::print("closure = {} current define  {} = {}\n", closure.toString(), declaration.parameters[i].lexeme, any_tostring(arguments[i]));
+        environment->define(declaration.parameters[i].lexeme, arguments[i]);
+        fmt::print("closure = {} current define  {} = {}\n", closure->toString(), declaration.parameters[i].lexeme, any_tostring(arguments[i]));
     }
-    fmt::print("current env = {}\n", environment.toString());
+    fmt::print("current env = {}\n", environment->toString());
     try {
         interpreter.executeBlock(declaration.body, environment);
     } catch (ReturnOut& t) {

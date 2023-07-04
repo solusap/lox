@@ -14,8 +14,8 @@
 
 struct Interpter : public Expr::Visitor, public Stmt::Visitor
 {
-    Environment globals;
-    Environment* environment = &globals;
+    shared_ptr<Environment> globals;
+    shared_ptr<Environment> environment;
     bool isTruthy(std::any& obj);
     bool isEqual(std::any const& a, std::any const& b);
 
@@ -52,7 +52,9 @@ struct Interpter : public Expr::Visitor, public Stmt::Visitor
     void interpret(Expr::Expr& expression);
     void interpret(std::vector<shared_ptr<Stmt::Stmt>>& statements);
     void execute(Stmt::Stmt& stmt);
-    void executeBlock(vector<shared_ptr<Stmt::Stmt>>& statements, Environment& env);
+    void executeBlock(vector<shared_ptr<Stmt::Stmt>>& statements, shared_ptr<Environment> env);
+
+    ~Interpter();
 };
 
 struct ReturnOut : public std::runtime_error

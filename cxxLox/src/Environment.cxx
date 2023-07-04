@@ -1,36 +1,36 @@
 #include "Environment.h"
 #include "Token.h"
 #include <exception>
+#include <map>
 #include <stdexcept>
 #include "fmt/core.h"
 #include "any_type.h"
-// struct Environment
-// {
-//     std::map<std::string, std::any> values;
-//     void define(const std::string& name, const std::any& value);
-    
-// };
+
+#include "unwind_backstrace.h"
+
+std::map<Environment *, std::string> g_objTrace;
 
 Environment::Environment() : enclosing(nullptr)
 {
+    std::string t = backtrace2String();
+    g_objTrace.insert({this, t});
 }
 
-Environment::Environment(const Environment& env)
-{
-    this->enclosing = env.enclosing;
-    this->values = env.values;
-    this->enclosing = nullptr;
-}
+// Environment::Environment(const Environment& env)
+// {
+//     this->enclosing = env.enclosing;
+//     this->values = env.values;
+//     this->enclosing = nullptr;
+// }
 
-Environment Environment::operator=(const Environment& env)
-{
-    this->enclosing = env.enclosing;
-    this->values = env.values;
-    this->enclosing = nullptr;
-    return *this;
-}
+// Environment Environment::operator=(const Environment& env)
+// {
+//     this->enclosing = env.enclosing;
+//     this->values = env.values;
+//     return *this;
+// }
 
-Environment::Environment(Environment* enclosing) : enclosing(enclosing)
+Environment::Environment(shared_ptr<Environment> enclosing) : enclosing(enclosing)
 {
 }
 
@@ -74,4 +74,21 @@ string Environment::toString() const
         ret += fmt::format("{}: {}\n", v.first, any_tostring(v.second));
     }
     return ret;
+}
+
+
+Environment::~Environment()
+{
+#ifdef DEBUG_TRACE
+    // backtrace();
+    if (g_objTrace.count(this) != 0) {
+        g_objTrace.erase(this);
+    } else {
+        fmt::print("{:#x} is not exist may be free ?", this);
+    }
+#endif
+    if (this->enclosing) {
+        // this->enclosing.reset();
+        return;
+    }
 }

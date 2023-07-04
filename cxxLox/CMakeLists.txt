@@ -9,6 +9,8 @@ add_subdirectory(tool)
 add_subdirectory(test)
 
 set(cxxLox_src
+    src/unwind_backstrace.cxx
+
     src/any_type.cxx
     src/Lox.cxx
     src/Scanner.cxx
@@ -29,6 +31,11 @@ target_compile_options(cxxLox PUBLIC
     -std=c++17
     -fsanitize=address
     -O0
+    -fPIC
+)
+
+target_link_options(cxxLox PRIVATE
+    -fPIC
 )
 
 target_include_directories(cxxLox PUBLIC
@@ -37,6 +44,7 @@ target_include_directories(cxxLox PUBLIC
 )
 
 target_link_libraries(cxxLox
+    unwind
     pthread
     asan.a
     dl

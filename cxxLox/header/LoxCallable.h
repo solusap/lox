@@ -20,8 +20,8 @@ struct LoxCallable
 struct LoxFunction : public LoxCallable
 {
     Stmt::Function& declaration;
-    Environment& closure;
-    LoxFunction(Stmt::Function& declaration, Environment& closure);
+    std::shared_ptr<Environment> closure;
+    LoxFunction(Stmt::Function& declaration, shared_ptr<Environment> closure);
     std::any call(Interpter& interpreter, std::vector<std::any>arguments) override;
     int arity() override;
     string toString() override;

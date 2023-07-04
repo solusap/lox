@@ -10,16 +10,18 @@
 
 struct Environment
 {
-    Environment* enclosing = nullptr;
-    Environment(const Environment& env);
+    std::shared_ptr<Environment> enclosing;
+    // Environment &env;
+    // Environment(Environment& env);
     Environment();
-    Environment operator=(const Environment& env);
-    Environment(Environment* enclosing);
+    // Environment operator=(const Environment& env);
+    Environment(shared_ptr<Environment> enclosing);
     std::map<std::string, std::any> values;
     void define(const std::string& name, const std::any& value);
     std::any get(Token name);
     void assign(Token name, const std::any& value);
     string toString() const;
+    ~Environment();
 };
 
 

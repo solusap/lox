@@ -10,6 +10,7 @@ target_compile_options(cxxLoxGenrateAst PUBLIC
     -g
     -std=c++17
     -fsanitize=address
+    -fPIC
 )
 
 target_link_directories(cxxLoxGenrateAst PUBLIC
@@ -22,6 +23,10 @@ target_link_libraries(cxxLoxGenrateAst
     dl
     rt
     fmt.a
+)
+
+target_link_options(cxxLoxGenrateAst PRIVATE
+    -fPIC
 )
 
 add_custom_command(
